@@ -17,10 +17,10 @@ wp-config.php
 /wp-content/cache-purge/
 
 # Ignore plugins (if you don't want to track them)
-wp-content/plugins/*
+wp-content/plugins/
 
 # Ignore themes (optional, track only custom ones)
- wp-content/themes/*
+ wp-content/themes/
 
 # Ignore node_modules (if using npm / build tools)
 node_modules/
