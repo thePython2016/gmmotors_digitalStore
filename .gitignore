@@ -1,0 +1,34 @@
+# WordPress core
+/wp-admin/
+/wp-includes/
+
+# Ignore configuration files (local only)
+wp-config.php
+.htaccess
+
+# Ignore content that changes often
+/wp-content/uploads/
+/wp-content/cache/
+/wp-content/upgrade/
+/wp-content/backups/
+/wp-content/aiowps_backups/
+/wp-content/w3tc-config/
+/wp-content/litespeed-cache/
+/wp-content/cache-purge/
+
+# Ignore plugins (if you don't want to track them)
+wp-content/plugins/
+
+# Ignore themes (optional, track only custom ones)
+ 
+
+# Ignore node_modules (if using npm / build tools)
+node_modules/
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Ignore logs
+*.log
