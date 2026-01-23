@@ -56,6 +56,29 @@ function astra_hb_account_dynamic_css( $dynamic_css, $dynamic_css_filtered = '' 
 	 * Account CSS.
 	 */
 	$css_output_desktop = array(
+		// Account menu icons styling
+		'.ast-account-nav-menu .ast-account-menu-icon' => array(
+			'display'        => 'inline-flex',
+			'align-items'    => 'center',
+			'justify-content' => 'center',
+			'margin-right'   => '8px',
+			'vertical-align' => 'middle',
+			'flex-shrink'    => '0',
+		),
+		'.ast-account-nav-menu .ast-account-menu-icon svg' => array(
+			'width'         => '16px',
+			'height'        => '16px',
+			'stroke'        => 'currentColor',
+			'fill'          => 'none',
+			'stroke-width'  => '2',
+		),
+		'.ast-account-nav-menu .menu-item > a' => array(
+			'display'       => 'inline-flex',
+			'align-items'   => 'center',
+		),
+		'.ast-account-nav-menu .ast-account-menu-text' => array(
+			'display'       => 'inline-block',
+		),
 		'.ast-header-account-type-icon'           => array(
 			'-js-display'    => 'inline-flex',
 			'display'        => 'inline-flex',

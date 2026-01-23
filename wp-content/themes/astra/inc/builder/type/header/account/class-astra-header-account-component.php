@@ -38,6 +38,34 @@ if ( ! class_exists( 'Astra_Header_Account_Component' ) ) {
 		}
 
 		/**
+		 * Get icon for account menu endpoint
+		 *
+		 * @param string $endpoint The WooCommerce account endpoint.
+		 * @return string SVG icon markup.
+		 */
+		public static function get_account_menu_icon( $endpoint ) {
+			$icons = array(
+				'dashboard'      => '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>',
+				'orders'         => '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>',
+				'downloads'       => '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>',
+				'edit-address'   => '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>',
+				'edit-account'   => '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
+				'customer-logout' => '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>',
+			);
+
+			// Handle aliases
+			if ( 'addresses' === $endpoint ) {
+				$endpoint = 'edit-address';
+			} elseif ( 'account-details' === $endpoint || 'account' === $endpoint ) {
+				$endpoint = 'edit-account';
+			} elseif ( 'logout' === $endpoint ) {
+				$endpoint = 'customer-logout';
+			}
+
+			return isset( $icons[ $endpoint ] ) ? $icons[ $endpoint ] : '';
+		}
+
+		/**
 		 * Account navigation markup
 		 */
 		public static function account_menu_markup() {
@@ -119,9 +147,16 @@ if ( ! class_exists( 'Astra_Header_Account_Component' ) ) {
 				if ( class_exists( 'woocommerce' ) ) {
 					?>
 					<ul id="ast-hf-account-menu" class="main-header-menu ast-nav-menu ast-account-nav-menu ast-header-account-woocommerce-menu">
-						<?php foreach ( wc_get_account_menu_items() as $endpoint => $item ) { ?>
+						<?php foreach ( wc_get_account_menu_items() as $endpoint => $item ) { 
+							$icon = self::get_account_menu_icon( $endpoint );
+							?>
 							<li class="menu-item <?php echo esc_attr( wc_get_account_menu_item_classes( $endpoint ) ); ?>">
-								<a href="<?php echo esc_url( wc_get_account_endpoint_url( $endpoint ) ); ?>" class="menu-link"><?php echo esc_html( $item ); ?></a>
+								<a href="<?php echo esc_url( wc_get_account_endpoint_url( $endpoint ) ); ?>" class="menu-link">
+									<?php if ( $icon ) { ?>
+										<span class="ast-account-menu-icon" aria-hidden="true"><?php echo wp_kses( $icon, Astra_Icons::allowed_svg_args() ); ?></span>
+									<?php } ?>
+									<span class="ast-account-menu-text"><?php echo esc_html( $item ); ?></span>
+								</a>
 							</li>
 						<?php } ?>
 					</ul>

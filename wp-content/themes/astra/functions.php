@@ -456,18 +456,22 @@ add_action('wp_enqueue_scripts', function () {
     $css = "
     /* Cart trigger */
     .ast-cart-menu-trigger {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
         font-weight: 600;
         text-decoration: none;
         cursor: pointer;
+        white-space: nowrap !important;
+        flex-wrap: nowrap !important;
     }
 
     /* Basket wrapper */
     .cart-icon-wrap {
         position: relative;
         display: inline-block;
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
     }
 
     /* Basket icon */
@@ -495,6 +499,9 @@ add_action('wp_enqueue_scripts', function () {
     /* Cart total */
     .ast-cart-menu-trigger .cart-total {
         font-size: 14px;
+        white-space: nowrap !important;
+        display: inline-block !important;
+        flex-shrink: 0 !important;
     }
 
     /* User gravatar */
@@ -629,6 +636,87 @@ add_action('wp_enqueue_scripts', function () {
         visibility: visible !important;
         opacity: 1 !important;
     }
+
+    /* Align My Orders menu item text to the right in account menu */
+    .ast-account-nav-menu .menu-item.woocommerce-MyAccount-navigation-link--orders .menu-link,
+    .ast-account-nav-menu .menu-item[class*=\"orders\"] .menu-link,
+    .ast-account-nav-menu .menu-item .menu-link[href*=\"orders\"] {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        width: 100% !important;
+    }
+
+    .ast-account-nav-menu .menu-item.woocommerce-MyAccount-navigation-link--orders .menu-link .ast-account-menu-text,
+    .ast-account-nav-menu .menu-item[class*=\"orders\"] .menu-link .ast-account-menu-text,
+    .ast-account-nav-menu .menu-item .menu-link[href*=\"orders\"] .ast-account-menu-text {
+        margin-left: auto !important;
+        text-align: right !important;
+    }
+
+    /* Align Shopping Cart menu item text to the right in account menu and main menu */
+    .ast-account-nav-menu .menu-item[class*=\"cart\"] .menu-link,
+    .ast-account-nav-menu .menu-item .menu-link[href*=\"cart\"],
+    .ast-account-nav-menu .menu-item .menu-link[href*=\"basket\"],
+    .ast-header-menu .menu-item[class*=\"cart\"] > a,
+    .ast-header-menu .menu-item > a[href*=\"cart\"],
+    .ast-header-menu .menu-item > a[href*=\"basket\"],
+    .main-header-menu .menu-item[class*=\"cart\"] > a,
+    .main-header-menu .menu-item > a[href*=\"cart\"],
+    .ast-header-menu .menu-item:has(.ast-cart-menu-trigger) > a,
+    .main-header-menu .menu-item:has(.ast-cart-menu-trigger) > a {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        width: 100% !important;
+    }
+
+    /* Keep cart trigger inline with icon and text on same line */
+    .ast-cart-menu-trigger {
+        display: inline-flex !important;
+        align-items: center !important;
+        white-space: nowrap !important;
+        flex-wrap: nowrap !important;
+    }
+
+    .ast-account-nav-menu .menu-item[class*=\"cart\"] .menu-link .ast-account-menu-text,
+    .ast-account-nav-menu .menu-item .menu-link[href*=\"cart\"] .ast-account-menu-text,
+    .ast-account-nav-menu .menu-item .menu-link[href*=\"basket\"] .ast-account-menu-text,
+    .ast-header-menu .menu-item[class*=\"cart\"] > a .ast-account-menu-text,
+    .ast-header-menu .menu-item > a[href*=\"cart\"] .ast-account-menu-text,
+    .ast-header-menu .menu-item > a[href*=\"basket\"] .ast-account-menu-text,
+    .main-header-menu .menu-item[class*=\"cart\"] > a .ast-account-menu-text,
+    .main-header-menu .menu-item > a[href*=\"cart\"] .ast-account-menu-text,
+    .ast-account-nav-menu .menu-item[class*=\"cart\"] .menu-link span:not(.ast-account-menu-icon),
+    .ast-account-nav-menu .menu-item .menu-link[href*=\"cart\"] span:not(.ast-account-menu-icon),
+    .ast-header-menu .menu-item[class*=\"cart\"] > a span:not(.ast-account-menu-icon),
+    .ast-header-menu .menu-item > a[href*=\"cart\"] span:not(.ast-account-menu-icon),
+    .ast-cart-menu-trigger .cart-total {
+        margin-left: auto !important;
+        text-align: right !important;
+        white-space: nowrap !important;
+        display: inline-block !important;
+    }
+
+    /* Ensure cart icon and text stay on same line */
+    .ast-cart-menu-trigger .cart-icon-wrap,
+    .ast-cart-menu-trigger .cart-total {
+        display: inline-flex !important;
+        align-items: center !important;
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+    }
+    
+    /* Prevent any wrapping of cart elements */
+    .ast-cart-menu-trigger * {
+        white-space: nowrap !important;
+    }
+    
+    /* Ensure parent menu item doesn't cause wrapping */
+    .ast-header-menu .menu-item:has(.ast-cart-menu-trigger),
+    .main-header-menu .menu-item:has(.ast-cart-menu-trigger) {
+        white-space: nowrap !important;
+    }
     ";
 
     wp_register_style('menu-ui-style', false);
@@ -649,4 +737,210 @@ if (!function_exists('product_search_banner_shortcode')) {
 }
 if (!shortcode_exists('product_search_banner')) {
     add_shortcode('product_search_banner', 'product_search_banner_shortcode');
+}
+
+/**
+ * ======================================================
+ * AVATAR GRAVITY ADMIN MENU WITH ICONS
+ * ======================================================
+ * Creates admin menu with submenu items and appropriate icons
+ */
+if (!function_exists('avatar_gravity_admin_menu')) {
+    function avatar_gravity_admin_menu() {
+        // Main menu page
+        add_menu_page(
+            __('Avatar Gravity', 'astra'),
+            __('Avatar Gravity', 'astra'),
+            'manage_options',
+            'avatar-gravity',
+            'avatar_gravity_main_page',
+            'dashicons-admin-users', // User/avatar icon
+            30
+        );
+
+        // Submenu: Settings
+        add_submenu_page(
+            'avatar-gravity',
+            __('Settings', 'astra'),
+            __('Settings', 'astra'),
+            'manage_options',
+            'avatar-gravity-settings',
+            'avatar_gravity_settings_page'
+        );
+
+        // Submenu: Profiles
+        add_submenu_page(
+            'avatar-gravity',
+            __('Profiles', 'astra'),
+            __('Profiles', 'astra'),
+            'manage_options',
+            'avatar-gravity-profiles',
+            'avatar_gravity_profiles_page'
+        );
+
+        // Submenu: Forms
+        add_submenu_page(
+            'avatar-gravity',
+            __('Forms', 'astra'),
+            __('Forms', 'astra'),
+            'manage_options',
+            'avatar-gravity-forms',
+            'avatar_gravity_forms_page'
+        );
+
+        // Submenu: Entries
+        add_submenu_page(
+            'avatar-gravity',
+            __('Entries', 'astra'),
+            __('Entries', 'astra'),
+            'manage_options',
+            'avatar-gravity-entries',
+            'avatar_gravity_entries_page'
+        );
+
+        // Submenu: Reports
+        add_submenu_page(
+            'avatar-gravity',
+            __('Reports', 'astra'),
+            __('Reports', 'astra'),
+            'manage_options',
+            'avatar-gravity-reports',
+            'avatar_gravity_reports_page'
+        );
+    }
+    add_action('admin_menu', 'avatar_gravity_admin_menu');
+}
+
+/**
+ * Add icons to Avatar Gravity submenu items
+ */
+if (!function_exists('avatar_gravity_submenu_icons')) {
+    function avatar_gravity_submenu_icons() {
+        global $submenu;
+        
+        if (!isset($submenu['avatar-gravity'])) {
+            return;
+        }
+        
+        // Define icons for each submenu item
+        $icons = array(
+            'avatar-gravity-settings' => 'dashicons-admin-settings',  // Settings icon
+            'avatar-gravity-profiles'  => 'dashicons-admin-users',     // Users/Profiles icon
+            'avatar-gravity-forms'     => 'dashicons-edit',            // Forms/Edit icon
+            'avatar-gravity-entries'   => 'dashicons-list-view',       // Entries/List icon
+            'avatar-gravity-reports'   => 'dashicons-chart-bar',        // Reports/Chart icon
+        );
+        
+        foreach ($submenu['avatar-gravity'] as $key => $item) {
+            $menu_slug = isset($item[2]) ? $item[2] : '';
+            if (isset($icons[$menu_slug])) {
+                $icon_class = $icons[$menu_slug];
+                $submenu['avatar-gravity'][$key][0] = '<span class="dashicons ' . esc_attr($icon_class) . '" style="font-size: 16px; width: 16px; height: 16px; margin-right: 5px; vertical-align: middle;"></span> ' . esc_html($item[0]);
+            }
+        }
+    }
+    add_action('admin_menu', 'avatar_gravity_submenu_icons', 99);
+}
+
+/**
+ * Add CSS for better icon styling
+ */
+if (!function_exists('avatar_gravity_submenu_icon_styles')) {
+    function avatar_gravity_submenu_icon_styles() {
+        ?>
+        <style type="text/css">
+            #toplevel_page_avatar-gravity .wp-submenu li a .dashicons {
+                display: inline-block;
+                margin-right: 5px;
+                vertical-align: middle;
+                line-height: 1;
+            }
+        </style>
+        <?php
+    }
+    add_action('admin_head', 'avatar_gravity_submenu_icon_styles');
+}
+
+/**
+ * Main page callback
+ */
+if (!function_exists('avatar_gravity_main_page')) {
+    function avatar_gravity_main_page() {
+        ?>
+        <div class="wrap">
+            <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+            <p><?php esc_html_e('Welcome to Avatar Gravity Dashboard', 'astra'); ?></p>
+        </div>
+        <?php
+    }
+}
+
+/**
+ * Settings page callback
+ */
+if (!function_exists('avatar_gravity_settings_page')) {
+    function avatar_gravity_settings_page() {
+        ?>
+        <div class="wrap">
+            <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+            <p><?php esc_html_e('Avatar Gravity Settings', 'astra'); ?></p>
+        </div>
+        <?php
+    }
+}
+
+/**
+ * Profiles page callback
+ */
+if (!function_exists('avatar_gravity_profiles_page')) {
+    function avatar_gravity_profiles_page() {
+        ?>
+        <div class="wrap">
+            <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+            <p><?php esc_html_e('User Profiles Management', 'astra'); ?></p>
+        </div>
+        <?php
+    }
+}
+
+/**
+ * Forms page callback
+ */
+if (!function_exists('avatar_gravity_forms_page')) {
+    function avatar_gravity_forms_page() {
+        ?>
+        <div class="wrap">
+            <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+            <p><?php esc_html_e('Forms Management', 'astra'); ?></p>
+        </div>
+        <?php
+    }
+}
+
+/**
+ * Entries page callback
+ */
+if (!function_exists('avatar_gravity_entries_page')) {
+    function avatar_gravity_entries_page() {
+        ?>
+        <div class="wrap">
+            <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+            <p><?php esc_html_e('Form Entries', 'astra'); ?></p>
+        </div>
+        <?php
+    }
+}
+
+/**
+ * Reports page callback
+ */
+if (!function_exists('avatar_gravity_reports_page')) {
+    function avatar_gravity_reports_page() {
+        ?>
+        <div class="wrap">
+            <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+            <p><?php esc_html_e('Reports & Analytics', 'astra'); ?></p>
+        </div>
+        <?php
+    }
 }
