@@ -740,6 +740,578 @@ if (!shortcode_exists('product_search_banner')) {
 }
 
 /**
+ * Product Search Overlay on Slider Revolution
+ * Add product search form as overlay on top of slider, positioned on the left
+ */
+if (!function_exists('product_search_slider_overlay')) {
+    function product_search_slider_overlay() {
+        ?>
+        <div class="slider-search-overlay-wrapper">
+            <div class="product-search-overlay-container">
+                <div class="product-search-form-container">
+                    <h2 class="product-search-title">Product</h2>
+                    
+                    <form class="product-search-form" method="get" action="<?php echo esc_url( wc_get_page_permalink( 'shop' ) ); ?>">
+                        
+                        <!-- Main Search Input -->
+                        <div class="search-field-wrapper">
+                            <input 
+                                type="text" 
+                                name="s" 
+                                class="product-search-input" 
+                                placeholder="Search any product"
+                                value="<?php echo isset( $_GET['s'] ) ? esc_attr( $_GET['s'] ) : ''; ?>"
+                            >
+                            <input type="hidden" name="post_type" value="product">
+                        </div>
+                        
+                        <!-- Filter Dropdowns -->
+                        <div class="search-filters">
+                            <!-- First Row -->
+                            <div class="filter-row">
+                                <select name="product_cat" class="filter-dropdown">
+                                    <option value="">Category</option>
+                                    <?php
+                                    if ( taxonomy_exists( 'product_cat' ) ) {
+                                        $categories = get_terms( array(
+                                            'taxonomy' => 'product_cat',
+                                            'hide_empty' => false,
+                                            'orderby' => 'name',
+                                            'order' => 'ASC',
+                                        ) );
+                                        if ( ! is_wp_error( $categories ) && ! empty( $categories ) ) {
+                                            foreach ( $categories as $category ) {
+                                                $selected = isset( $_GET['product_cat'] ) && $_GET['product_cat'] == $category->slug ? 'selected' : '';
+                                                $count = $category->count > 0 ? ' (' . $category->count . ')' : '';
+                                                echo '<option value="' . esc_attr( $category->slug ) . '" ' . $selected . '>' . esc_html( $category->name ) . $count . '</option>';
+                                            }
+                                        }
+                                    }
+                                    ?>
+                                </select>
+                                
+                                <select name="product_tag" class="filter-dropdown">
+                                    <option value="">Tag</option>
+                                    <?php
+                                    if ( taxonomy_exists( 'product_tag' ) ) {
+                                        $tags = get_terms( array(
+                                            'taxonomy' => 'product_tag',
+                                            'hide_empty' => false,
+                                            'orderby' => 'name',
+                                            'order' => 'ASC',
+                                        ) );
+                                        if ( ! is_wp_error( $tags ) && ! empty( $tags ) ) {
+                                            foreach ( $tags as $tag ) {
+                                                $selected = isset( $_GET['product_tag'] ) && $_GET['product_tag'] == $tag->slug ? 'selected' : '';
+                                                $count = $tag->count > 0 ? ' (' . $tag->count . ')' : '';
+                                                echo '<option value="' . esc_attr( $tag->slug ) . '" ' . $selected . '>' . esc_html( $tag->name ) . $count . '</option>';
+                                            }
+                                        }
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+                            
+                            <!-- Second Row -->
+                            <div class="filter-row">
+                                <select name="orderby" class="filter-dropdown">
+                                    <option value="">Sort By</option>
+                                    <option value="popularity" <?php selected( isset( $_GET['orderby'] ) ? $_GET['orderby'] : '', 'popularity' ); ?>>Popularity</option>
+                                    <option value="rating" <?php selected( isset( $_GET['orderby'] ) ? $_GET['orderby'] : '', 'rating' ); ?>>Rating</option>
+                                    <option value="date" <?php selected( isset( $_GET['orderby'] ) ? $_GET['orderby'] : '', 'date' ); ?>>Latest</option>
+                                    <option value="price" <?php selected( isset( $_GET['orderby'] ) ? $_GET['orderby'] : '', 'price' ); ?>>Price: Low to High</option>
+                                    <option value="price-desc" <?php selected( isset( $_GET['orderby'] ) ? $_GET['orderby'] : '', 'price-desc' ); ?>>Price: High to Low</option>
+                                </select>
+                                
+                                <select name="price_range" class="filter-dropdown">
+                                    <option value="">Price range</option>
+                                    <option value="0-50" <?php selected( isset( $_GET['price_range'] ) ? $_GET['price_range'] : '', '0-50' ); ?>>$0 - $50</option>
+                                    <option value="50-100" <?php selected( isset( $_GET['price_range'] ) ? $_GET['price_range'] : '', '50-100' ); ?>>$50 - $100</option>
+                                    <option value="100-250" <?php selected( isset( $_GET['price_range'] ) ? $_GET['price_range'] : '', '100-250' ); ?>>$100 - $250</option>
+                                    <option value="250-500" <?php selected( isset( $_GET['price_range'] ) ? $_GET['price_range'] : '', '250-500' ); ?>>$250 - $500</option>
+                                    <option value="500+" <?php selected( isset( $_GET['price_range'] ) ? $_GET['price_range'] : '', '500+' ); ?>>$500+</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Third Row: Product Attributes -->
+                            <?php
+                            // Get WooCommerce product attributes
+                            $product_attributes = array();
+                            if ( function_exists( 'wc_get_attribute_taxonomies' ) ) {
+                                $attribute_taxonomies = wc_get_attribute_taxonomies();
+                                if ( ! empty( $attribute_taxonomies ) ) {
+                                    foreach ( $attribute_taxonomies as $attribute ) {
+                                        $taxonomy = wc_attribute_taxonomy_name( $attribute->attribute_name );
+                                        if ( taxonomy_exists( $taxonomy ) ) {
+                                            $product_attributes[ $taxonomy ] = array(
+                                                'label' => $attribute->attribute_label,
+                                                'name' => $attribute->attribute_name
+                                            );
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // Display product attributes in rows of 2
+                            if ( ! empty( $product_attributes ) ) {
+                                $attribute_index = 0;
+                                $attributes_array = array_values( $product_attributes );
+                                
+                                for ( $i = 0; $i < count( $attributes_array ); $i += 2 ) {
+                                    echo '<div class="filter-row">';
+                                    
+                                    // First attribute in row
+                                    if ( isset( $attributes_array[ $i ] ) ) {
+                                        $taxonomy = wc_attribute_taxonomy_name( $attributes_array[ $i ]['name'] );
+                                        $attribute_label = $attributes_array[ $i ]['label'];
+                                        $attribute_terms = get_terms( array(
+                                            'taxonomy' => $taxonomy,
+                                            'hide_empty' => false,
+                                            'orderby' => 'name',
+                                            'order' => 'ASC',
+                                        ) );
+                                        
+                                        if ( ! is_wp_error( $attribute_terms ) && ! empty( $attribute_terms ) ) {
+                                            echo '<select name="filter_' . esc_attr( $attributes_array[ $i ]['name'] ) . '" class="filter-dropdown">';
+                                            echo '<option value="">' . esc_html( $attribute_label ) . '</option>';
+                                            foreach ( $attribute_terms as $term ) {
+                                                $selected = isset( $_GET[ 'filter_' . $attributes_array[ $i ]['name'] ] ) && $_GET[ 'filter_' . $attributes_array[ $i ]['name'] ] == $term->slug ? 'selected' : '';
+                                                $count = $term->count > 0 ? ' (' . $term->count . ')' : '';
+                                                echo '<option value="' . esc_attr( $term->slug ) . '" ' . $selected . '>' . esc_html( $term->name ) . $count . '</option>';
+                                            }
+                                            echo '</select>';
+                                        }
+                                    }
+                                    
+                                    // Second attribute in row
+                                    if ( isset( $attributes_array[ $i + 1 ] ) ) {
+                                        $taxonomy = wc_attribute_taxonomy_name( $attributes_array[ $i + 1 ]['name'] );
+                                        $attribute_label = $attributes_array[ $i + 1 ]['label'];
+                                        $attribute_terms = get_terms( array(
+                                            'taxonomy' => $taxonomy,
+                                            'hide_empty' => false,
+                                            'orderby' => 'name',
+                                            'order' => 'ASC',
+                                        ) );
+                                        
+                                        if ( ! is_wp_error( $attribute_terms ) && ! empty( $attribute_terms ) ) {
+                                            echo '<select name="filter_' . esc_attr( $attributes_array[ $i + 1 ]['name'] ) . '" class="filter-dropdown">';
+                                            echo '<option value="">' . esc_html( $attribute_label ) . '</option>';
+                                            foreach ( $attribute_terms as $term ) {
+                                                $selected = isset( $_GET[ 'filter_' . $attributes_array[ $i + 1 ]['name'] ] ) && $_GET[ 'filter_' . $attributes_array[ $i + 1 ]['name'] ] == $term->slug ? 'selected' : '';
+                                                $count = $term->count > 0 ? ' (' . $term->count . ')' : '';
+                                                echo '<option value="' . esc_attr( $term->slug ) . '" ' . $selected . '>' . esc_html( $term->name ) . $count . '</option>';
+                                            }
+                                            echo '</select>';
+                                        }
+                                    }
+                                    
+                                    echo '</div>';
+                                }
+                            }
+                            ?>
+                        </div>
+                        
+                        <!-- Search Button -->
+                        <button type="submit" class="product-search-button">SEARCH</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <style>
+        /* Product Search Overlay on Slider Revolution */
+        .rev_slider_wrapper,
+        .tp-banner,
+        .rev_slider,
+        .tp-revslider-mainwrapper,
+        .revolution-slider-wrapper,
+        .wpb_rev_slider_element,
+        .rev_slider_wrapper .tp-banner,
+        .rev_slider_wrapper .tp-banner-container {
+            position: relative !important;
+        }
+        
+        /* Make slider wrapper contain the overlay */
+        .rev_slider_wrapper:first-of-type {
+            position: relative !important;
+        }
+        
+        .slider-search-overlay-wrapper {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            z-index: 99999 !important;
+            pointer-events: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+        }
+        
+        .slider-search-overlay-wrapper.positioned {
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+        
+        /* Ensure overlay is positioned relative to slider */
+        .rev_slider_wrapper .slider-search-overlay-wrapper {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            z-index: 99999 !important;
+        }
+        
+        /* Ensure slider elements don't overlap the form */
+        .rev_slider_wrapper .tp-banner,
+        .rev_slider_wrapper .tp-banner-container,
+        .rev_slider_wrapper .rev_slider,
+        .tp-revslider-mainwrapper .tp-banner,
+        .rev_slider_wrapper .tp-layer,
+        .rev_slider_wrapper .tp-parallax-wrap,
+        .rev_slider_wrapper .tp-mask-wrap {
+            z-index: 1 !important;
+        }
+        
+        /* Ensure form is always on top */
+        .slider-search-overlay-wrapper,
+        .slider-search-overlay-wrapper * {
+            z-index: 99999 !important;
+        }
+        
+        .product-search-form-container {
+            z-index: 99999 !important;
+            position: relative !important;
+        }
+        
+        .product-search-overlay-container {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            pointer-events: none !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            padding: 40px !important;
+            padding-left: 60px !important;
+            box-sizing: border-box !important;
+            z-index: 99999 !important;
+        }
+        
+        .product-search-form-container {
+            background: #ffffff !important;
+            padding: 40px !important;
+            border-radius: 15px !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+            pointer-events: auto !important;
+            max-width: 450px !important;
+            width: 100% !important;
+            z-index: 99999 !important;
+            position: relative !important;
+        }
+        
+        .product-search-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+            margin-bottom: 25px;
+            margin-top: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+        
+        .product-search-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .search-field-wrapper {
+            margin-bottom: 5px;
+        }
+        
+        .product-search-input {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 1rem;
+            border: 1px solid #d0d0d0;
+            border-radius: 8px;
+            background: #ffffff;
+            color: #333;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+        
+        .product-search-input:focus {
+            outline: none;
+            border-color: #4a90e2;
+        }
+        
+        .product-search-input::placeholder {
+            color: #999;
+        }
+        
+        .search-filters {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .filter-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .filter-dropdown {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 1rem;
+            border: 1px solid #d0d0d0;
+            border-radius: 8px;
+            background: #ffffff;
+            color: #333;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 12px;
+            padding-right: 40px;
+            transition: border-color 0.3s ease;
+            box-sizing: border-box;
+        }
+        
+        .filter-dropdown:hover {
+            border-color: #4a90e2;
+        }
+        
+        .filter-dropdown:focus {
+            outline: none;
+            border-color: #4a90e2;
+        }
+        
+        .product-search-button {
+            width: 100%;
+            padding: 18px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #ffffff;
+            background: #4a90e2;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            margin-top: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .product-search-button:hover {
+            background: #357abd;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+        }
+        
+        .product-search-button:active {
+            transform: translateY(0);
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .product-search-overlay-container {
+                padding: 30px 20px;
+            }
+            
+            .product-search-form-container {
+                max-width: 100%;
+                padding: 30px 20px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .product-search-overlay-container {
+                padding: 20px;
+                justify-content: center;
+            }
+            
+            .product-search-form-container {
+                padding: 25px 15px;
+            }
+            
+            .product-search-title {
+                font-size: 1.8rem;
+                margin-bottom: 20px;
+            }
+            
+            .filter-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .product-search-form-container {
+                padding: 20px 15px;
+            }
+            
+            .product-search-input,
+            .filter-dropdown,
+            .product-search-button {
+                padding: 15px;
+                font-size: 0.95rem;
+            }
+        }
+        
+        /* Hide product search banner section on home page (but keep slider overlay) */
+        body.home .product-search-banner-section,
+        body.home-page .product-search-banner-section {
+            display: none !important;
+        }
+        
+        /* Keep slider search overlay visible on home page */
+        body.home .slider-search-overlay-wrapper,
+        body.home-page .slider-search-overlay-wrapper {
+            display: block !important;
+        }
+        
+        /* Hide form blocks that appear before featured products sections */
+        /* This will be handled by JavaScript for more precise targeting */
+        </style>
+        <script>
+        jQuery(document).ready(function($) {
+            // Remove product search banner section on home page (but keep slider overlay)
+            function removeBannerSectionOnHomePage() {
+                if ($('body').hasClass('home') || $('body').hasClass('home-page')) {
+                    // Only remove the banner section, not the slider overlay
+                    $('.product-search-banner-section').remove();
+                }
+            }
+            
+            // Remove banner section on home page
+            removeBannerSectionOnHomePage();
+            setTimeout(removeBannerSectionOnHomePage, 100);
+            setTimeout(removeBannerSectionOnHomePage, 500);
+            
+            // Remove form blocks that appear before featured products
+            function removeFormsBeforeFeaturedProducts() {
+                // Find featured products sections
+                var $featuredProducts = $('[class*="featured_products"], [class*="featured-products"], [id*="featured-products"], .woocommerce section.products');
+                
+                $featuredProducts.each(function() {
+                    var $featuredSection = $(this);
+                    var $prevSibling = $featuredSection.prev();
+                    
+                    // Remove product search forms that are previous siblings
+                    if ($prevSibling.hasClass('product-search-banner-section') || 
+                        $prevSibling.hasClass('slider-search-overlay-wrapper') ||
+                        $prevSibling.find('.product-search-form-container').length > 0) {
+                        $prevSibling.remove();
+                    }
+                    
+                    // Also check parent's previous siblings
+                    var $parent = $featuredSection.parent();
+                    var $parentPrev = $parent.prev();
+                    if ($parentPrev.hasClass('product-search-banner-section') || 
+                        $parentPrev.hasClass('slider-search-overlay-wrapper')) {
+                        $parentPrev.remove();
+                    }
+                });
+            }
+            
+            // Remove forms before featured products
+            removeFormsBeforeFeaturedProducts();
+            
+            // Also run after content loads
+            setTimeout(removeFormsBeforeFeaturedProducts, 500);
+            setTimeout(removeFormsBeforeFeaturedProducts, 1000);
+            
+            // Move overlay inside Slider Revolution container if it exists
+            function positionSearchOverlay() {
+                var $overlay = $('.slider-search-overlay-wrapper');
+                var $slider = $('.rev_slider_wrapper:first, .tp-banner:first, .rev_slider:first, .tp-revslider-mainwrapper:first, .revolution-slider-wrapper:first, .wpb_rev_slider_element:first, .rev_slider_wrapper .tp-banner-container:first');
+                
+                if ($slider.length > 0 && $overlay.length > 0) {
+                    // Make slider container relative if not already
+                    $slider.css({
+                        'position': 'relative',
+                        'z-index': '1'
+                    });
+                    
+                    // Ensure slider inner elements have lower z-index
+                    $slider.find('.tp-banner, .tp-banner-container, .rev_slider').css('z-index', '1');
+                    
+                    // Move overlay inside slider container
+                    $overlay.appendTo($slider.first());
+                    
+                    // Ensure overlay is positioned correctly with maximum z-index
+                    $overlay.css({
+                        'position': 'absolute',
+                        'top': '0',
+                        'left': '0',
+                        'width': '100%',
+                        'height': '100%',
+                        'z-index': '99999',
+                        'pointer-events': 'none'
+                    });
+                    
+                    // Ensure form container has high z-index
+                    $overlay.find('.product-search-form-container').css({
+                        'z-index': '99999',
+                        'position': 'relative',
+                        'pointer-events': 'auto'
+                    });
+                    
+                    // Ensure overlay container has high z-index
+                    $overlay.find('.product-search-overlay-container').css({
+                        'z-index': '99999',
+                        'position': 'absolute'
+                    });
+                    
+                    // Show overlay only after it's properly positioned
+                    $overlay.addClass('positioned');
+                }
+            }
+            
+            // Try immediately
+            positionSearchOverlay();
+            
+            // Try after a short delay (for lazy-loaded sliders)
+            setTimeout(positionSearchOverlay, 500);
+            setTimeout(positionSearchOverlay, 1000);
+            setTimeout(positionSearchOverlay, 2000);
+            setTimeout(positionSearchOverlay, 3000);
+            
+            // Also try when Revolution Slider is ready
+            if (typeof jQuery.fn.revolution !== 'undefined') {
+                $(document).on('revolution.slide.onloaded', positionSearchOverlay);
+                $(document).on('revolution.slide.onchange', positionSearchOverlay);
+            }
+            
+            // Watch for slider container changes
+            var observer = new MutationObserver(function(mutations) {
+                positionSearchOverlay();
+            });
+            
+            // Observe body for changes
+            if (document.body) {
+                observer.observe(document.body, {
+                    childList: true,
+                    subtree: true
+                });
+            }
+        });
+        </script>
+        <?php
+    }
+}
+add_action('astra_header_after', 'product_search_slider_overlay', 10);
+
+/**
  * ======================================================
  * AVATAR GRAVITY ADMIN MENU WITH ICONS
  * ======================================================
@@ -944,3 +1516,162 @@ if (!function_exists('avatar_gravity_reports_page')) {
         <?php
     }
 }
+
+/**
+ * ======================================================
+ * VEHICLE FINDER FORM SHORTCODE
+ * ======================================================
+ * Usage: [vehicle_finder_form]
+ * Displays a vehicle search form with populated fields from URL parameters
+ */
+add_shortcode('vehicle_finder_form', function () {
+    ob_start();
+
+    if (!function_exists('get_product_terms')) {
+        function get_product_terms($taxonomy, $hide_empty = false) {
+            if (!taxonomy_exists($taxonomy)) {
+                return [];
+            }
+            $terms = get_terms([
+                'taxonomy'   => $taxonomy,
+                'hide_empty' => $hide_empty,
+            ]);
+            return (is_wp_error($terms) || empty($terms)) ? [] : $terms;
+        }
+    }
+
+    $conditions = get_product_terms('pa_condition');
+    $makes      = get_product_terms('pa_make');
+    $models     = get_product_terms('pa_model');
+    if (empty($models)) {
+        $models = get_product_terms('pa-model');
+    }
+    $years = get_product_terms('pa_year');
+    if (empty($years)) {
+        $years = get_product_terms('pa-year');
+    }
+    if (empty($years)) {
+        $years = get_product_terms('pa_model_year');
+    }
+    if (empty($years)) {
+        $years = get_product_terms('pa-model-year');
+    }
+    $bodies   = get_product_terms('pa_body-type');
+    $mileages = get_product_terms('pa_mileage_range');
+    if (empty($mileages)) {
+        $mileages = get_product_terms('pa_mileage-range');
+    }
+
+    // Get current values from URL parameters
+    $current_product_name = isset($_GET['product_name']) ? sanitize_text_field($_GET['product_name']) : '';
+    $current_condition    = isset($_GET['condition']) ? sanitize_text_field($_GET['condition']) : '';
+    $current_year         = isset($_GET['year']) ? sanitize_text_field($_GET['year']) : '';
+    $current_make         = isset($_GET['make']) ? sanitize_text_field($_GET['make']) : '';
+    $current_model        = isset($_GET['model']) ? sanitize_text_field($_GET['model']) : '';
+    $current_body         = isset($_GET['body']) ? sanitize_text_field($_GET['body']) : '';
+    $current_mileage      = isset($_GET['mileage']) ? sanitize_text_field($_GET['mileage']) : '';
+    $current_location     = isset($_GET['location']) ? sanitize_text_field($_GET['location']) : '';
+    ?>
+
+    <div class="vehicle-finder-wrapper">
+        <div class="vehicle-finder-title">I AM LOOKING FOR</div>
+
+        <form class="vehicle-finder-form" method="get" action="<?php echo esc_url(wc_get_page_permalink('shop')); ?>">
+            <div class="vehicle-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+
+                <label class="vf-label" style="grid-column: span 2;">SELECT YOUR VEHICLE OPTIONS</label>
+
+                <!-- PRODUCT NAME (spans two columns) -->
+                <input type="text" name="product_name" placeholder="Product Name" value="<?php echo esc_attr($current_product_name); ?>" style="grid-column: span 2;">
+
+                <!-- CONDITION -->
+                <select name="condition">
+                    <option value="">Condition</option>
+                    <?php foreach ($conditions as $term): ?>
+                        <option value="<?php echo esc_attr($term->slug); ?>" <?php selected($current_condition, $term->slug); ?>>
+                            <?php echo esc_html($term->name); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+
+                <!-- YEAR -->
+                <select name="year">
+                    <option value="">Year</option>
+                    <?php foreach ($years as $term): ?>
+                        <option value="<?php echo esc_attr($term->slug); ?>" <?php selected($current_year, $term->slug); ?>>
+                            <?php echo esc_html($term->name); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+
+                <!-- MAKE -->
+                <select name="make">
+                    <option value="">Make</option>
+                    <?php foreach ($makes as $term): ?>
+                        <option value="<?php echo esc_attr($term->slug); ?>" <?php selected($current_make, $term->slug); ?>>
+                            <?php echo esc_html($term->name); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+
+                <!-- MODEL -->
+                <select name="model">
+                    <option value="">Model</option>
+                    <?php foreach ($models as $term): ?>
+                        <option value="<?php echo esc_attr($term->slug); ?>" <?php selected($current_model, $term->slug); ?>>
+                            <?php echo esc_html($term->name); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+
+                <!-- BODY TYPE -->
+                <select name="body">
+                    <option value="">Body Type</option>
+                    <?php foreach ($bodies as $term): ?>
+                        <option value="<?php echo esc_attr($term->slug); ?>" <?php selected($current_body, $term->slug); ?>>
+                            <?php echo esc_html($term->name); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+
+                <!-- MILEAGE -->
+                <select name="mileage">
+                    <option value="">Max Mileage</option>
+                    <?php foreach ($mileages as $term): ?>
+                        <option value="<?php echo esc_attr($term->slug); ?>" <?php selected($current_mileage, $term->slug); ?>>
+                            <?php echo esc_html($term->name); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+
+                <input type="text" name="location" placeholder="State, Zip, Town" value="<?php echo esc_attr($current_location); ?>">
+
+                <button type="submit" class="vf-submit" style="grid-column: span 2;">
+                    FIND MY CAR
+                </button>
+
+            </div>
+
+            <input type="hidden" name="post_type" value="product">
+        </form>
+    </div>
+
+    <?php
+    return ob_get_clean();
+});
+
+/**
+ * Disable WordPress update checks to prevent warnings in local development
+ */
+add_filter('pre_site_transient_update_core', '__return_null');
+add_filter('pre_site_transient_update_plugins', '__return_null');
+add_filter('pre_site_transient_update_themes', '__return_null');
+add_action('init', function() {
+    remove_action('admin_init', '_maybe_update_core');
+    remove_action('admin_init', '_maybe_update_plugins');
+    remove_action('admin_init', '_maybe_update_themes');
+    remove_action('wp_version_check', 'wp_version_check');
+    remove_action('admin_init', '_maybe_update_core');
+    remove_action('wp_update_plugins', 'wp_update_plugins');
+    remove_action('wp_update_themes', 'wp_update_themes');
+}, 1);

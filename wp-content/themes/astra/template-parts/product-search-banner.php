@@ -13,20 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 <section class="product-search-banner-section">
 	<div class="product-search-banner-container">
-		<!-- Left Side: Promotional Content -->
-		<div class="banner-promotional-content">
-			<h1 class="banner-title">
-				<span class="banner-title-line1">Raining Offers For</span>
-				<span class="banner-title-line2">Hot Summer!</span>
-			</h1>
-			<p class="banner-offer">25% Off On All Products</p>
-			<div class="banner-buttons">
-				<a href="<?php echo esc_url( wc_get_page_permalink( 'shop' ) ); ?>" class="banner-btn banner-btn-primary">SHOP NOW</a>
-				<a href="<?php echo esc_url( wc_get_page_permalink( 'shop' ) ); ?>" class="banner-btn banner-btn-secondary">FIND MORE</a>
-			</div>
-		</div>
-
-		<!-- Right Side: Product Search Form -->
+		<!-- Left Side: Product Search Form -->
 		<div class="banner-search-form-wrapper">
 			<div class="product-search-form-container">
 				<h2 class="product-search-title">Product</h2>
@@ -101,8 +88,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 					</div>
 					
 					<!-- Search Button -->
-					<button type="submit" class="product-search-button">Search</button>
+					<button type="submit" class="product-search-button">SEARCH</button>
 				</form>
+			</div>
+		</div>
+
+		<!-- Right Side: Promotional Content -->
+		<div class="banner-promotional-content">
+			<h1 class="banner-title">
+				<span class="banner-title-line1">Raining Offers For</span>
+				<span class="banner-title-line2">Hot Summer!</span>
+			</h1>
+			<p class="banner-offer">25% Off On All Products</p>
+			<div class="banner-buttons">
+				<a href="<?php echo esc_url( wc_get_page_permalink( 'shop' ) ); ?>" class="banner-btn banner-btn-primary">SHOP NOW</a>
+				<a href="<?php echo esc_url( wc_get_page_permalink( 'shop' ) ); ?>" class="banner-btn banner-btn-secondary">FIND MORE</a>
 			</div>
 		</div>
 	</div>
@@ -114,7 +114,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	position: relative;
 	width: 100%;
 	min-height: 500px;
-	background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+	background: #e8f4fd;
 	padding: 60px 40px;
 	display: flex;
 	align-items: center;
@@ -131,7 +131,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	align-items: center;
 }
 
-/* Left Side: Promotional Content */
+/* Right Side: Promotional Content */
 .banner-promotional-content {
 	color: #ffffff;
 	z-index: 2;
@@ -201,25 +201,25 @@ if ( ! defined( 'ABSPATH' ) ) {
 	color: #4a90e2;
 }
 
-/* Right Side: Product Search Form */
+/* Left Side: Product Search Form */
 .banner-search-form-wrapper {
 	z-index: 2;
 }
 
 .product-search-form-container {
-	background: rgba(255, 255, 255, 0.95);
-	backdrop-filter: blur(10px);
+	background: #ffffff;
 	padding: 40px;
-	border-radius: 20px;
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+	border-radius: 15px;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 .product-search-title {
-	font-size: 2.5rem;
+	font-size: 2rem;
 	font-weight: bold;
 	color: #333;
 	text-align: center;
-	margin-bottom: 30px;
+	margin-bottom: 25px;
+	margin-top: 0;
 	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
@@ -235,10 +235,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 .product-search-input {
 	width: 100%;
-	padding: 18px 20px;
-	font-size: 1.1rem;
-	border: 2px solid #e0e0e0;
-	border-radius: 10px;
+	padding: 15px 20px;
+	font-size: 1rem;
+	border: 1px solid #d0d0d0;
+	border-radius: 8px;
 	background: #ffffff;
 	color: #333;
 	box-sizing: border-box;
@@ -270,9 +270,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	width: 100%;
 	padding: 15px 20px;
 	font-size: 1rem;
-	border: 2px solid #d0d0d0;
-	border-radius: 10px;
-	background: #f5f5f5;
+	border: 1px solid #d0d0d0;
+	border-radius: 8px;
+	background: #ffffff;
 	color: #333;
 	cursor: pointer;
 	appearance: none;
@@ -287,28 +287,28 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 .filter-dropdown:hover {
 	border-color: #4a90e2;
-	background-color: #ffffff;
 }
 
 .filter-dropdown:focus {
 	outline: none;
 	border-color: #4a90e2;
-	background-color: #ffffff;
 }
 
 .product-search-button {
 	width: 100%;
 	padding: 18px 30px;
-	font-size: 1.2rem;
+	font-size: 1.1rem;
 	font-weight: bold;
 	color: #ffffff;
 	background: #4a90e2;
 	border: none;
-	border-radius: 10px;
+	border-radius: 8px;
 	cursor: pointer;
 	transition: background-color 0.3s ease, transform 0.1s ease;
 	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 	margin-top: 5px;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
 }
 
 .product-search-button:hover {
