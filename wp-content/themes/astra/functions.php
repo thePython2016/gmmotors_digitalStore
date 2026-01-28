@@ -1661,6 +1661,92 @@ add_shortcode('vehicle_finder_form', function () {
 });
 
 /**
+ * Apply sidebar-style attribute filters (?filter_make=toyota, etc.) to main product queries.
+ *
+ * Ensures URLs like /?filter_make=toyota or /shop/?filter_year=2023
+ * actually filter WooCommerce product archives while preserving
+ * the default product card layout/template.
+ */
+add_action('pre_get_posts', function ($query) {
+    if (is_admin() || !$query->is_main_query()) {
+        return;
+    }
+
+    // Target core WooCommerce product listings.
+    if (
+        !$query->is_post_type_archive('product') &&
+        !$query->is_tax(array('product_cat', 'product_tag')) &&
+        'product' !== $query->get('post_type')
+    ) {
+        return;
+    }
+
+    $tax_query = (array) $query->get('tax_query');
+
+    // Support both "make=toyota" and "filter_make=toyota".
+    if (isset($_GET['make']) && '' !== (string) $_GET['make'] && !isset($_GET['filter_make'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        $_GET['filter_make'] = $_GET['make']; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+    }
+
+    foreach ($_GET as $key => $raw_value) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        if (!is_string($key) || 0 !== strpos($key, 'filter_')) {
+            continue;
+        }
+
+        $attribute = substr($key, 7);
+        $attribute = sanitize_key($attribute);
+        if ('' === $attribute) {
+            continue;
+        }
+
+        $value = is_array($raw_value) ? implode(',', $raw_value) : (string) $raw_value;
+        $value = sanitize_text_field(wp_unslash($value));
+        if ('' === $value) {
+            continue;
+        }
+
+        // Map attribute key to taxonomy, using Woo helper when available.
+        $taxonomy = function_exists('wc_attribute_taxonomy_name')
+            ? wc_attribute_taxonomy_name($attribute)
+            : ('pa_' . $attribute);
+
+        if (!taxonomy_exists($taxonomy)) {
+            $fallback_taxonomies = array(
+                'pa_' . $attribute,
+                'pa-' . $attribute,
+            );
+            $found_taxonomy      = '';
+            foreach ($fallback_taxonomies as $maybe_taxonomy) {
+                if (taxonomy_exists($maybe_taxonomy)) {
+                    $found_taxonomy = $maybe_taxonomy;
+                    break;
+                }
+            }
+            if ('' === $found_taxonomy) {
+                continue;
+            }
+            $taxonomy = $found_taxonomy;
+        }
+
+        $terms = array_filter(array_map('sanitize_title', array_map('trim', explode(',', $value))));
+        if (empty($terms)) {
+            continue;
+        }
+
+        $tax_query[] = array(
+            'taxonomy' => $taxonomy,
+            'field'    => 'slug',
+            'terms'    => $terms,
+            'operator' => 'IN',
+        );
+    }
+
+    if (!empty($tax_query)) {
+        $query->set('tax_query', $tax_query);
+    }
+});
+
+/**
  * Disable WordPress update checks to prevent warnings in local development
  */
 add_filter('pre_site_transient_update_core', '__return_null');
