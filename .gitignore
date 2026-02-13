@@ -1,6 +1,8 @@
 # WordPress core
 /wp-admin/
 /wp-includes/
+/database/
+.env
 
 # Ignore configuration files (local only)
 wp-config.php
